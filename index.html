@@ -32,8 +32,9 @@
     <h1>Transcrição de Áudio</h1>
     <button id="startButton">Iniciar Gravação</button>
     <button id="stopButton" disabled>Parar Gravação</button>
-    <textarea id="transcription" placeholder="A transcrição aparecerá aqui..." readonly></textarea>
+    <textarea id="transcription" placeholder="A transcrição aparecerá aqui..." ></textarea>
     <button id="copyButton" disabled>Copiar Texto</button>
+    <button id="clearButton">Limpar Texto</button>
 
     <script>
         let recognition;
@@ -42,6 +43,7 @@
         const stopButton = document.getElementById('stopButton');
         const transcriptionArea = document.getElementById('transcription');
         const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
 
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
@@ -91,8 +93,9 @@
             };
 
             startButton.addEventListener('click', () => {
-                transcriptionArea.value = ''; // Limpa a transcrição anterior ao iniciar uma nova gravação
-                recognition.start();
+                if (!isRecording) {
+                    recognition.start();
+                }
             });
 
             stopButton.addEventListener('click', () => {
@@ -103,6 +106,11 @@
                 transcriptionArea.select();
                 document.execCommand('copy');
                 alert('Texto copiado para a área de transferência!');
+            });
+
+            clearButton.addEventListener('click', () => {
+                transcriptionArea.value = '';
+                copyButton.disabled = true;
             });
         } else {
             transcriptionArea.value = 'Seu navegador não suporta a API de Reconhecimento de Fala.';
