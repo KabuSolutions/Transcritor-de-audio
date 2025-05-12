@@ -31,12 +31,15 @@
 <body>
     <h1>Transcrição de Áudio</h1>
     <button id="startButton">Iniciar Gravação</button>
+    <button id="stopButton" disabled>Parar Gravação</button>
     <textarea id="transcription" placeholder="A transcrição aparecerá aqui..." readonly></textarea>
     <button id="copyButton" disabled>Copiar Texto</button>
 
     <script>
         let recognition;
+        let isRecording = false;
         const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
         const transcriptionArea = document.getElementById('transcription');
         const copyButton = document.getElementById('copyButton');
 
@@ -47,20 +50,23 @@
             recognition.lang = 'pt-BR';
 
             recognition.onstart = () => {
+                isRecording = true;
+                startButton.disabled = true;
+                stopButton.disabled = false;
                 startButton.textContent = 'Gravando...';
-                transcriptionArea.value = '';
-                copyButton.disabled = true;
             };
 
             recognition.onresult = (event) => {
                 let interimTranscript = '';
                 let finalTranscript = '';
+                let currentTranscript = '';
 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    currentTranscript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
+                        finalTranscript += currentTranscript + ' ';
                     } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        interimTranscript = transcriptionArea.value + currentTranscript;
                     }
                 }
                 transcriptionArea.value = finalTranscript || interimTranscript;
@@ -68,18 +74,29 @@
 
             recognition.onerror = (event) => {
                 console.error('Erro de reconhecimento de fala:', event.error);
+                startButton.disabled = false;
+                stopButton.disabled = true;
                 startButton.textContent = 'Iniciar Gravação';
+                isRecording = false;
             };
 
             recognition.onend = () => {
+                isRecording = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
                 startButton.textContent = 'Iniciar Gravação';
-                if (transcriptionArea.value) {
+                if (transcriptionArea.value.trim()) {
                     copyButton.disabled = false;
                 }
             };
 
             startButton.addEventListener('click', () => {
+                transcriptionArea.value = ''; // Limpa a transcrição anterior ao iniciar uma nova gravação
                 recognition.start();
+            });
+
+            stopButton.addEventListener('click', () => {
+                recognition.stop();
             });
 
             copyButton.addEventListener('click', () => {
